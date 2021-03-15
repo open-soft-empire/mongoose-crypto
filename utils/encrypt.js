@@ -2,10 +2,19 @@ const crypto = require('crypto');
 
 const SymCiph = (obj, encryption_key, iv_length, cipher_algorithm, digestion_module) => {
 	if(obj) {
+		const type = typeof (obj);
 		const iv = crypto.randomBytes(Number(iv_length));
 		let cipher = crypto.createCipheriv(cipher_algorithm, Buffer.from(encryption_key), iv);
-		
-		let encrypted = cipher.update(JSON.stringify(obj));
+
+		let encryptable_val;
+
+		if (type === 'string') {
+			encryptable_val = obj;
+		} else {
+			encryptable_val = JSON.stringify(obj);
+		}
+
+		let encrypted = cipher.update(encryptable_val);
 
 		encrypted = Buffer.concat([encrypted, cipher.final()]);
 
