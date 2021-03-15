@@ -1,3 +1,6 @@
+const SymCiph = require('../utils/encrypt');
+const SymDeciph = require('../utils/decrypt');
+
 const validateVersion = (mongoose_v) => {
 	let allowedv = '5.0.0';
 	let version = mongoose_v;
@@ -45,11 +48,33 @@ const removeClearText = (obj, fields) => {
 	return obj;
 }
 
-const setValueToFields = (obj, decrypted_obj, e_fields, o_fields) => {
+const setValueToFields = (obj, decrypted_obj, e_fields, o_fields, return_chain_option) => {
 	e_fields.forEach(field => {
 		obj[field] = decrypted_obj[field];
 	});
-	obj._encrypted_chain = undefined;
+
+	if(!return_chain_option) {
+		obj._encrypted_chain = undefined;
+	}
+
+	return obj;
+}
+
+const encryptFields = (obj, e_fields, encryption_key, iv_length, encryption_algorithm, digestion_module) => {
+
+	e_fields.forEach(field => {
+		obj[field] = SymCiph(obj[field], encryption_key, iv_length, encryption_algorithm, digestion_module);
+	});
+
+	return obj;
+}
+
+const decryptFields = (obj, e_fields, encryption_key, encryption_algorithm, digestion_module) => {
+	let type = obj._encrypted_chain ? 'object' : 'field';
+
+	e_fields.forEach(field => {
+		obj[field] = SymDeciph(obj[field], encryption_key, encryption_algorithm, digestion_module, type);
+	});
 
 	return obj;
 }
@@ -60,4 +85,6 @@ module.exports = {
 	unique,
 	removeClearText,
 	setValueToFields,
+	encryptFields,
+	decryptFields,
 };
